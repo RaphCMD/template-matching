@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Template Matcher Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #07170f;
+        --bg-glow-1: rgba(215, 38, 61, 0.08);
+        --bg-glow-2: rgba(255, 255, 255, 0.06);
+        --panel: rgba(20, 42, 28, 0.4);
+        --panel-2: rgba(20, 54, 34, 0.35);
+        --accent: #d7263d; /* classic red */
+        --accent-2: #fff2f2; /* soft white for contrast */
+        --text: #f8fbf7; /* bright snow white */
+        --muted: #c1d8c6; /* pale green */
+        --border: rgba(255, 255, 255, 0.18);
+        --shadow: 0 18px 80px rgba(0, 0, 0, 0.55);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Space Grotesk", "Inter", system-ui, -apple-system,
+          sans-serif;
+        color: var(--text);
+        background: radial-gradient(
+            circle at 18% 20%,
+            var(--bg-glow-1),
+            transparent 25%
+          ),
+          radial-gradient(circle at 80% 0%, var(--bg-glow-2), transparent 28%),
+          var(--bg);
+        display: flex;
+        justify-content: center;
+        padding: 48px 16px 64px;
+        position: relative;
+      }
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(
+          145deg,
+          rgba(255, 255, 255, 0.04),
+          rgba(0, 0, 0, 0.15)
+        );
+        pointer-events: none;
+        z-index: 0;
+      }
+      .glass {
+        width: 1100px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        border-radius: 18px;
+        padding: 28px;
+        backdrop-filter: blur(16px);
+        position: relative;
+        overflow: hidden;
+        z-index: 2;
+      }
+      .glass::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          145deg,
+          rgba(255, 255, 255, 0.06),
+          rgba(255, 255, 255, 0)
+        );
+        pointer-events: none;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+      .title {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .title h1 {
+        margin: 0;
+        font-size: 28px;
+        letter-spacing: -0.4px;
+      }
+      .title .subtitle {
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .pill {
+        background: rgba(215, 38, 61, 0.14);
+        color: var(--accent);
+        padding: 10px 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(215, 38, 61, 0.32);
+        font-size: 13px;
+        line-height: 1.2;
+        backdrop-filter: blur(10px);
+      }
+      form {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin-bottom: 16px;
+        backdrop-filter: blur(12px);
+      }
+      #snow-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+        z-index: 1;
+      }
+      .glass {
+        z-index: 2;
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        background: var(--panel-2);
+        padding: 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(8px);
+      }
+      label {
+        font-weight: 600;
+        font-size: 14px;
+        letter-spacing: -0.1px;
+      }
+      .target-preview {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border);
+        margin-top: 4px;
+      }
+      .target-preview .thumb {
+        width: 96px;
+        height: 96px;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+        flex-shrink: 0;
+      }
+      .target-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .target-preview .label {
+        font-weight: 600;
+        font-size: 13px;
+        color: var(--text);
+        margin-bottom: 4px;
+      }
+      .hint {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      input[type="text"] {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text);
+        font-size: 14px;
+      }
+      .options {
+        display: grid;
+        gap: 10px;
+      }
+      .option-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .option-row.upload-row {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .upload-radio {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .upload-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        flex: 1;
+        min-width: 240px;
+      }
+      .option-row input[type="radio"] {
+        accent-color: var(--accent);
+        transform: scale(1.05);
+      }
+      .file-picker {
+        flex: 1;
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px dashed var(--border);
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--muted);
+      }
+      .file-picker:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      button {
+        grid-column: 1 / -1;
+        justify-self: flex-start;
+        padding: 12px 18px;
+        background: linear-gradient(120deg, var(--accent), var(--accent-2));
+        color: #0b1222;
+        border: none;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 12px 30px rgba(92, 210, 255, 0.25);
+        transition: transform 0.12s ease, box-shadow 0.2s ease;
+      }
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 14px 34px rgba(124, 242, 196, 0.28);
+      }
+      .banner {
+        padding: 12px 14px;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .banner.error {
+        color: #ffb4b4;
+        border-color: rgba(255, 107, 107, 0.35);
+        background: rgba(255, 107, 107, 0.08);
+      }
+      .stack {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+      .badge {
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      thead {
+        background: rgba(255, 255, 255, 0.03);
+      }
+      th,
+      td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+        font-size: 14px;
+      }
+      th {
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      tbody tr:hover {
+        background: rgba(255, 255, 255, 0.03);
+      }
+      .preview {
+        width: 120px;
+        height: 76px;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .mono {
+        font-family: "JetBrains Mono", "Space Grotesk", monospace;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .toast {
+        position: fixed;
+        bottom: 22px;
+        right: 22px;
+        min-width: 240px;
+        max-width: 360px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: rgba(26, 37, 62, 0.95);
+        border: 1px solid var(--border);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        opacity: 0;
+        transform: translateY(12px);
+        transition: opacity 220ms ease, transform 220ms ease;
+        pointer-events: none;
+        z-index: 20;
+        color: var(--text);
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .toast.hide {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      .toast .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: linear-gradient(120deg, var(--accent), var(--accent-2));
+        flex-shrink: 0;
+        box-shadow: 0 0 0 6px rgba(124, 242, 196, 0.12);
+      }
+      .toast strong {
+        font-weight: 700;
+      }
+      @media (max-width: 720px) {
+        body {
+          padding: 24px 12px;
+        }
+        .glass {
+          width: 100%;
+          padding: 18px;
+        }
+        header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .preview {
+          width: 100px;
+          height: 64px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="snow-canvas"></canvas>
+    <div class="glass">
+      <header>
+        <div class="title">
+          <h1>Template Matcher</h1>
+          <div class="subtitle">
+            Pick a target image, scan a folder, and surface the closest matches.
+          </div>
+        </div>
+        <div class="pill">
+          Default target: {{ defaults.default_target }}<br />Default search: {{
+          defaults.default_search_dir }}
+        </div>
+      </header>
+
+      <form
+        method="post"
+        action="{{ url_for('search') }}"
+        enctype="multipart/form-data"
+      >
+        <div class="field">
+          <label>Target image</label>
+          <div class="options">
+            <div class="option-row">
+              <input
+                type="radio"
+                id="target-default"
+                name="target_source"
+                value="default"
+                {% if target_label == defaults.default_target %}checked{% endif %}
+              />
+              <label for="target-default"
+                >Use default ({{ defaults.default_target }})</label
+              >
+            </div>
+            <div class="option-row upload-row">
+              <div class="upload-radio">
+                <input
+                  type="radio"
+                  id="target-upload"
+                  name="target_source"
+                  value="upload"
+                  {% if target_label != defaults.default_target %}checked{% endif %}
+                />
+                <label for="target-upload">Upload custom target</label>
+              </div>
+              <div class="upload-stack">
+                <input
+                  class="file-picker"
+                  id="target-file"
+                  type="file"
+                  name="target_file"
+                  accept=".png,.jpg,.jpeg,.bmp"
+                  {% if target_label == defaults.default_target %}disabled{% endif %}
+                />
+                {% if target_preview_url %}
+                <div class="target-preview">
+                  <div class="thumb">
+                    <img
+                      id="target-preview-img"
+                      src="{{ target_preview_url }}"
+                      data-default-src="{{ defaults.default_preview_url }}"
+                      data-current-src="{{ target_preview_url }}"
+                      alt="Current target image"
+                    />
+                  </div>
+                  <div>
+                    <div class="label">Current target preview</div>
+                    <p class="hint">
+                      Shows the default target or your uploaded image.
+                    </p>
+                  </div>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+            <p class="hint">
+              Tip: leave the uploader empty to stick with the default snippet.
+            </p>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="search_dir">Search directory</label>
+          <input
+            type="text"
+            id="search_dir"
+            name="search_dir"
+            value="{{ search_dir or defaults.default_search_dir }}"
+          />
+          <p class="hint">
+            Point to a folder with PNGs. The default set is {{
+            defaults.default_search_dir }}.
+          </p>
+        </div>
+
+        <div class="field">
+          <label>Matching options</label>
+          <div class="options">
+            <div class="option-row">
+              <input
+                type="checkbox"
+                id="use_pyramids"
+                name="use_pyramids"
+                {%
+                if
+                use_pyramids
+                %}checked{%
+                endif
+                %}
+              />
+              <label for="use_pyramids"
+                >Execute a scale-invariant search (image pyramids)</label
+              >
+            </div>
+            <div class="option-row">
+              <input
+                type="checkbox"
+                id="use_multithreading"
+                name="use_multithreading"
+                {%
+                if
+                use_multithreading
+                %}checked{%
+                endif
+                %}
+              />
+              <label for="use_multithreading"
+                >Enable multithreading for faster scanning</label
+              >
+            </div>
+          </div>
+          <p class="hint">
+            Uncheck pyramids to use a single-scale match. Uncheck multithreading
+            to run sequentially.
+          </p>
+        </div>
+
+        <button type="submit">Begin search</button>
+      </form>
+
+      {% if error %}
+      <div class="banner error">{{ error }}</div>
+      {% endif %}
+
+      <div class="stack">
+        <div class="badge">
+          Target: <span class="mono">{{ target_label }}</span>
+        </div>
+        <div class="badge">
+          Directory: <span class="mono">{{ search_dir }}</span>
+        </div>
+        {% if csv_path %}
+        <div class="badge">
+          Results saved: <span class="mono">{{ csv_path.name }}</span>
+        </div>
+        {% endif %}
+      </div>
+
+      {% if results %}
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Match preview</th>
+            <th>Match filename</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in results %}
+          <tr>
+            <td>{{ row.rank }}</td>
+            <td>
+              <div class="preview">
+                <img
+                  src="{{ row.preview_url }}"
+                  alt="Preview of {{ row.filename }}"
+                />
+              </div>
+            </td>
+            <td>{{ row.filename }}</td>
+            <td class="mono">{{ "%.4f"|format(row.score) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="banner">
+        Run a search to see ranked results. The table will list rank, preview,
+        filename, and correlation score.
+      </div>
+      {% endif %}
+    </div>
+
+    {% if elapsed_time is not none %}
+    <div id="toast" class="toast show">
+      <span class="dot"></span>
+      <div>
+        <strong>Search finished</strong><br />
+        Completed in {{ "%.2f"|format(elapsed_time) }}s
+      </div>
+    </div>
+    <script>
+      (function () {
+        const toast = document.getElementById("toast");
+        if (!toast) return;
+        setTimeout(() => toast.classList.add("hide"), 4200);
+      })();
+    </script>
+    {% endif %}
+    <script>
+      (function () {
+        const defaultRadio = document.getElementById("target-default");
+        const uploadRadio = document.getElementById("target-upload");
+        const fileInput = document.getElementById("target-file");
+        const previewImg = document.getElementById("target-preview-img");
+        let activeObjectUrl = null;
+
+        const setPreview = (src, isObjectUrl = false) => {
+          if (!previewImg || !src) return;
+          if (activeObjectUrl && activeObjectUrl !== src) {
+            URL.revokeObjectURL(activeObjectUrl);
+            activeObjectUrl = null;
+          }
+          previewImg.src = src;
+          if (isObjectUrl) {
+            activeObjectUrl = src;
+          }
+        };
+
+        const applyModeState = () => {
+          const useUpload = uploadRadio && uploadRadio.checked;
+          if (fileInput) {
+            fileInput.disabled = !useUpload;
+            if (!useUpload) {
+              fileInput.value = "";
+            }
+          }
+          if (!previewImg) return;
+          if (useUpload) {
+            const currentSrc =
+              previewImg.dataset.currentSrc ||
+              previewImg.dataset.defaultSrc ||
+              previewImg.src;
+            setPreview(currentSrc);
+          } else {
+            setPreview(previewImg.dataset.defaultSrc || previewImg.src);
+          }
+        };
+
+        if (fileInput) {
+          fileInput.addEventListener("change", (event) => {
+            const file = event.target.files && event.target.files[0];
+            if (file) {
+              const url = URL.createObjectURL(file);
+              previewImg.dataset.currentSrc = url;
+              setPreview(url, true);
+            } else {
+              applyModeState();
+            }
+          });
+        }
+
+        if (defaultRadio)
+          defaultRadio.addEventListener("change", applyModeState);
+        if (uploadRadio) uploadRadio.addEventListener("change", applyModeState);
+        applyModeState();
+
+        window.addEventListener("beforeunload", () => {
+          if (activeObjectUrl) {
+            URL.revokeObjectURL(activeObjectUrl);
+          }
+        });
+      })();
+    </script>
+    <script>
+      (function () {
+        const canvas = document.getElementById("snow-canvas");
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        const flakes = [];
+        const FLAKE_COUNT = 160;
+
+        const resize = () => {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+        };
+        window.addEventListener("resize", resize);
+        resize();
+
+        const initFlake = () => ({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          r: Math.random() * 2.5 + 1,
+          dY: Math.random() * 1 + 0.5,
+          drift: Math.random() * 0.6 - 0.3,
+        });
+
+        for (let i = 0; i < FLAKE_COUNT; i++) {
+          flakes.push(initFlake());
+        }
+
+        const draw = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = "rgba(255,255,255,0.9)";
+          ctx.beginPath();
+          for (const flake of flakes) {
+            ctx.moveTo(flake.x, flake.y);
+            ctx.arc(flake.x, flake.y, flake.r, 0, Math.PI * 2, true);
+          }
+          ctx.fill();
+          update();
+          requestAnimationFrame(draw);
+        };
+
+        const update = () => {
+          for (let i = 0; i < flakes.length; i++) {
+            const flake = flakes[i];
+            flake.y += flake.dY;
+            flake.x += flake.drift;
+
+            if (flake.y > canvas.height) {
+              flakes[i] = initFlake();
+              flakes[i].y = 0;
+            }
+            if (flake.x > canvas.width) flake.x = 0;
+            if (flake.x < 0) flake.x = canvas.width;
+          }
+        };
+
+        draw();
+      })();
+    </script>
+  </body>
+</html>
