@@ -1,7 +1,12 @@
 # Multithreaded Template Matcher with Scale-Invariant Normalized Cross-Correlation
 
 **Raphael Bomshakian**
+
 **Ryan Ahlborn**
+
+## Video Demonstration
+
+https://youtu.be/JaWbpM0Q1ro
 
 To use this script you need:
 
